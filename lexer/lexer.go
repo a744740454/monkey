@@ -22,18 +22,35 @@ func New(input string) *Lexer {
 
 func (l *Lexer) readChar() {
 	//这里读取的是字节码
+	l.position = l.readPosition // 将指针指向下一个字符
+	l.readPosition += 1
 	if l.readPosition >= len(l.input) {
-		l.ch = 0
+		l.ch = 0 // 将当前的ascii吗归为0，代表没找到这个字符
 	} else {
 		l.ch = l.input[l.position] // go里面直接用索引拿字符串的值，会返回一个ascii码
 	}
-	l.position = l.readPosition
-	l.readPosition += 1
+
 }
 
-func (l Lexer) NextToken() token.Token {
+func (l *Lexer) readNumber() string {
+	//这里读取的是字节码
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return ch >= '0' && ch <= '9'
+}
+
+func (l *Lexer) NextToken() token.Token {
 	// 根据当前的标识符返回token对象
 	var tok token.Token
+
+	// 校验字符是否为空
+	l.skipWhitespace()
 
 	//校验当前的字符是不是下列符号中的一种，匹配的是ASCII码
 	switch l.ch {
@@ -53,15 +70,22 @@ func (l Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
+
 	case 0:
 		tok.Literal = token.EOF
 		tok.Literal = ""
 	default:
+		//如果是首字母、下划线开头
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier() // 读取关键字，并赋值给tok
 			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
 
+		} else if isDigit(l.ch) {
+			//如果是数字开头，将数字读取出来，写到token中
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
@@ -72,13 +96,20 @@ func (l Lexer) NextToken() token.Token {
 	return tok
 }
 
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
 // 读取关键字：这里会返回字符串
-func (l Lexer) readIdentifier() string {
+func (l *Lexer) readIdentifier() string {
 
 	position := l.position //记录当前的索引位置
 
 	// 一直读取字符串直到下一个字符串不在关键字范围内
 	for isLetter(l.ch) {
+		//第一次索引是0
 		l.readChar()
 	}
 	return l.input[position:l.position]

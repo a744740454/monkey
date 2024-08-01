@@ -38,6 +38,7 @@ var keywords = map[string]TokenType{
 }
 
 func LookupIdent(ident string) TokenType {
+	// 判断是不是关键字
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
