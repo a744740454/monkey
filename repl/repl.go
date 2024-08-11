@@ -1,4 +1,4 @@
-// Package repl 这个包一般用于接受用户的输入，将用户的输入通过语法分析器lexer，转换成对应的词法单元token
+// Package repl 这个包一般用于接受用户的输入，将用户的输入通过词法分析器lexer，转换成对应的词法单元token
 package repl
 
 import (

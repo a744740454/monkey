@@ -5,7 +5,7 @@ package token
 type TokenType string
 type Token struct {
 	Type    TokenType //当前字符的类型
-	Literal string    // 当前字符
+	Literal string    // "literal" 是一个术语，用于指代在源代码中直接写出的固定值
 }
 
 const (
