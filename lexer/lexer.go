@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	"monky/token"
 )
 
@@ -24,7 +25,7 @@ func (l *Lexer) readChar() {
 	//这里读取的是字节码
 	l.position = l.readPosition // 将指针指向下一个字符
 	l.readPosition += 1
-	if l.readPosition >= len(l.input) {
+	if l.readPosition > len(l.input) {
 		l.ch = 0 // 将当前的ascii吗归为0，代表没找到这个字符
 	} else {
 		l.ch = l.input[l.position] // go里面直接用索引拿字符串的值，会返回一个ascii码
@@ -55,9 +56,35 @@ func (l *Lexer) NextToken() token.Token {
 	//校验当前的字符是不是下列符号中的一种，匹配的是ASCII码
 	switch l.ch {
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		if l.peekChar() == '=' {
+			fmt.Println(string(l.ch))
+
+			tok.Type = token.EQ
+			tok.Literal = string(l.ch) + "="
+			l.readChar()
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '!':
+		if l.peekChar() == '=' {
+			tok.Type = token.NOT_EQ
+			tok.Literal = string(l.ch) + string(l.peekChar())
+			l.readChar()
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
 	case ';':
@@ -72,7 +99,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACE, l.ch)
 
 	case 0:
-		tok.Literal = token.EOF
+		tok.Type = token.EOF
 		tok.Literal = ""
 	default:
 		//如果是首字母、下划线开头
@@ -113,6 +140,14 @@ func (l *Lexer) readIdentifier() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
 }
 
 // 用于判断输入的字符是不是命名规则中的一员
